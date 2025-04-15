@@ -89,4 +89,4 @@ The CSV file will include all columns in the APV report along with new ones:
    node src/main.js
    ```
 
-This script processes packages and outputs the results to a CSV file called compinedreport.csv in the working directory.
+This script processes packages and outputs the results to a CSV file called compinedreport.csv and a JSON file call combined_report.json in the working directory.

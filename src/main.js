@@ -197,7 +197,47 @@ async function extractVulnerabilities(vulns) {
     });
     return Object.values(vulnerabilities);
 }
+function deduplicateArray(arr, key) {
+    if (!Array.isArray(arr)) {
+        // If arr is not an array, return an empty array to prevent errors
+        return [];
+    }
 
+    const seen = new Set();
+    return arr.filter(item => {
+        const uniqueKey = key(item);
+        if (seen.has(uniqueKey)) {
+            return false;
+        }
+        seen.add(uniqueKey);
+        return true;
+    });
+}
+
+function deduplicateData(data) {
+    return data.map(entry => {
+        // Ensure nvalues exists and is an array before deduplicating
+        if (Array.isArray(entry.nvalues)) {
+            entry.nvalues = deduplicateArray(entry.nvalues, item => item.version);
+        } else {
+            entry.nvalues = []; // Default to an empty array if nvalues is not defined
+        }
+
+        return entry;
+    });
+}
+
+async function saveToJSON(data) {
+    const fs = require('fs');
+    const jsonFilePath = path.join(__dirname, 'combined_report.json');
+
+    // Deduplicate data before saving to JSON
+    const deduplicatedData = deduplicateData(data);
+
+    // Write the data to a JSON file
+    fs.writeFileSync(jsonFilePath, JSON.stringify(deduplicatedData, null, 2));
+    console.log('Combined report saved to combined_report.json');
+}
 async function saveToCSV(data) {
     const csvWriter = createCsvWriter({
         path: path.join(__dirname, 'combined_report.csv'),
@@ -324,6 +364,7 @@ async function saveToCSV(data) {
 
     await csvWriter.writeRecords(records);
     console.log('Combined report saved to combined_report.csv');
+    await saveToJSON(data);
 }
 
 main();
